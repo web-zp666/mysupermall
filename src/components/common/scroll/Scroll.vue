@@ -37,6 +37,7 @@ export default {
       pullUpLoad: this.pullUpLoad,
       click: true,
       observeDOM: true,
+      //observeImage:true,
       mouseWheel: true,
     });
     //2.监听滚动的位置，需要外界传入值，自行决定是否监听，一味监听只会消耗性能
@@ -47,14 +48,23 @@ export default {
     this.scroll.on("pullingUp", () => {
       this.$emit('pullingUp')
     });
+
+    /* console.log(this.scroll) */
   },
   methods: {
     //封装点击回到顶部，运用了封装思想，让代码的维护起来比较方便
     scrollTo(x, y, time = 1000) {
-      this.scroll.scrollTo(x, y, time);
+      this.scroll && this.scroll.scrollTo(x, y, time);
     },
     finishPullUp(){
-      this.scroll.finishPullUp()
+      this.scroll && this.scroll.finishPullUp()
+    },
+    refresh(){
+      /* console.log('---------') */ //这里打印可以方便我们看到具体有没有起到效果
+      this.scroll && this.scroll.refresh()
+    },
+    getScrollY(){
+      return this.scroll ? this.scroll.y : 0 //三元表达式，先判断值来没来，如果来了就取值
     }
   },
 };
