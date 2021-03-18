@@ -1,6 +1,6 @@
 <template>
   <div class="goods-item" @click="itemClick">
-    <img :src="showImages" alt="" @load="imageLoad"/>
+    <img v-lazy="showImages" alt="" @load="imageLoad"/>
     <div class="goods-info">
       <p>{{ goodsItem.title }}</p>
       <span class="price">{{ goodsItem.price }}</span>
@@ -26,6 +26,8 @@ export default {
         this.$bus.$emit('homeImageLoad')
       } else if(this.$route.path.indexOf('/detail')){
         this.$bus.$emit('detailImageLoad')
+      } else if(this.$route.path.indexOf('/category')){
+        this.$bus.$emit('categoryImageLoad')
       }
     },
     itemClick(){
@@ -40,13 +42,13 @@ export default {
   },
   computed:{
     showImages(){
-      return this.goodsItem.image || this.goodsItem.show.img
+      return this.goodsItem.img || this.goodsItem.image || this.goodsItem.show.img
     }
   }
 };
 </script>
 
-<style>
+<style scoped>
 .goods-item {
   padding-bottom: 40px;
   position: relative;

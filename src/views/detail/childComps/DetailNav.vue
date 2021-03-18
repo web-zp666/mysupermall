@@ -29,7 +29,10 @@ export default {
   },
   methods:{
     titleClick(index){
+      //让点中的标题变色
       this.currentIndex = index
+      //将组件内部的点击事件传给父组件监听
+      this.$emit('titleClick',index)
     },
     backClick(){
       this.$router.back()

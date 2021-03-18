@@ -28,6 +28,12 @@ export default {
       type: Boolean,
       default: false,
     },
+    data:{
+      type:Array,
+      default(){
+        return[]
+      }
+    }
   },
   created() {},
   mounted() {
@@ -67,6 +73,11 @@ export default {
       return this.scroll ? this.scroll.y : 0 //三元表达式，先判断值来没来，如果来了就取值
     }
   },
+  watch:{
+    data(){
+      setTimeout(this.refresh,20)
+    }
+  }
 };
 </script>
 

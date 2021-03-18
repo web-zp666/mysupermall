@@ -1,15 +1,19 @@
 <template>
   <div id="detail">
-    <detail-nav/>
-    <scroll :probeType="3" :pullUpLoad="true" class="content" ref="scroll">
-      <detail-swiper :topImages="topImages"/>
+    <detail-nav @titleClick="titleClick" ref="nav"/>
+    <scroll :probeType="3" :pullUpLoad="true"
+    class="content" ref="scroll" @scroll="contentScroll">
+      <detail-swiper :topImages="topImages" ref="swiper"/>
       <detail-base-info :goods="goods"/>
       <detail-shop-info :shop="shop"/>
       <detail-goods-info :detail-info="detailInfo" @imageLoad="imageLoad"/>
-      <detail-params-info :params-info="paramsInfo"/>
-      <detail-comment-info :comment-info="commentInfo"/>
-      <goods-list :goods="recommends"/>
+      <detail-params-info ref="params" :params-info="paramsInfo"/>
+      <detail-comment-info ref="comments" :comment-info="commentInfo"/>
+      <goods-list ref="recommends" :goods="recommends"/>
     </scroll>
+    <detail-bottom-bar @addCart="addCart"/>
+    <back-top @click.native="btClick" v-show="isShowBackTop"/>
+    <!-- <toast :message="message" :isShow="isShow"/> -->
   </div>
 </template>
 
@@ -24,6 +28,12 @@ import DetailGoodsInfo from './childComps/DetailGoodsInfo.vue';
 import DetailParamsInfo from './childComps/DetailParamsInfo.vue';
 import DetailCommentInfo from './childComps/DetailCommentInfo.vue';
 import GoodsList from '@/components/content/goods/GoodsList.vue';
+import {debounce} from '@/common/utility'
+import DetailBottomBar from './childComps/DetailBottomBar.vue';
+import BackTop from '@/components/content/backTop/BackTop.vue';
+import {mapActions} from 'vuex'
+import Toast from '@/components/common/toast/Toast.vue';
+
 
 export default {
   name: 'Detail',
@@ -32,12 +42,14 @@ export default {
     DetailSwiper,
     DetailBaseInfo,
     DetailShopInfo,
-    Scroll,
     DetailGoodsInfo,
     DetailParamsInfo,
     DetailCommentInfo,
-    GoodsList
-
+    DetailBottomBar,
+    Scroll,
+    GoodsList,
+    BackTop,
+    Toast,
   },
   data() {
     return {
@@ -49,7 +61,10 @@ export default {
       paramsInfo:{},
       commentInfo:{},
       recommends:[],
-
+      themeTopY:null,
+      getThemeTopY:null,
+      currentIndex:0,
+      isShowBackTop:false,
     };
   },
   created(){
@@ -75,15 +90,94 @@ export default {
       if (data.rate.list){
         this.commentInfo = data.rate.list[0];
       }
+      //根据最新的数据，对应的dom是已经被渲染出来了
+      //但是图片依然是没有加载完的（目前获取的offset是不包含图片的）
+      //offset值不对的时候，一般都是因为图片的原因
+      /* this.$nextTick(() => {
+        this.themeTopY = [];
+        this.themeTopY.push(0);
+        this.themeTopY.push(this.$refs.params.$el.offsetTop - 44);
+        this.themeTopY.push(this.$refs.comments.$el.offsetTop - 44);
+        this.themeTopY.push(this.$refs.recommends.$el.offsetTop - 44);
+        console.log(this.themeTopY)
+      }) */
+
+      //使用防抖函数处理图片不能完全刷新才算top值的问题
+      this.getThemeTopY = debounce(() => {
+        this.themeTopY = [];
+        this.themeTopY.push(this.$refs.swiper.$el.offsetTop - 44);
+        this.themeTopY.push(this.$refs.params.$el.offsetTop - 44);
+        this.themeTopY.push(this.$refs.comments.$el.offsetTop - 44);
+        this.themeTopY.push(this.$refs.recommends.$el.offsetTop - 44);
+        this.themeTopY.push(Number.MAX_VALUE)
+        //console.log(this.themeTopY)
+      },100)
     })
     getRecommend().then((res) => {
       this.recommends = res.data.list
     })
   },
   methods:{
+    ...mapActions(['addToCart']),
+    addCart(){
+      //1.创建对象
+      const product = {};
+      //2.添加对象需要到的属性
+      product.iid = this.iid;
+      product.price = this.goods.newPrice;
+      product.title = this.goods.title;
+      product.desc = this.goods.desc;
+      product.imgUrl = this.topImages[0]
+      //3.添加到Store中
+      /* this.$store.dispatch('addToCart',product).then((res) => {
+        console.log(res);
+      }) */
+      this.addToCart(product).then((res) => {
+        //下面这种方法太麻烦了
+        /* this.isShow = true
+        this.message = res
+        setTimeout(() => {
+          this.isShow = false
+          this.message = ''
+        },2000) */
+        this.$toast.show(res);
+      })
+
+    },
+    btClick(){
+      this.$refs.scroll.scrollTo(0,0)
+    },
     imageLoad(){
       this.$refs.scroll.refresh()
-
+      this.getThemeTopY()
+    },
+    //
+    titleClick(index){
+      //console.log(index)
+      //设置点击标题跳转至指定位置
+      this.$refs.scroll.scrollTo(0,-this.themeTopY[index],300)
+    },
+    contentScroll(position){
+      //1.获取Y值
+      const y = -position.y
+      //判断是否显示backTop按钮
+      this.isShowBackTop = y > 1000;
+      let length = this.themeTopY.length;
+      //普通做法
+      /* for (let i = 0; i < length; i++) {
+        if (this.currentIndex !== i &&((i < length - 1 && y >= this.themeTopY[i] && y < this.themeTopY[i+1]) || (i === length-1 && y>=this.themeTopY[i]))){
+          this.currentIndex = i;
+          console.log(i)
+          this.$refs.nav.currentIndex = this.currentIndex
+        }
+      } */
+      //hack做法
+      for (let i = 0; i < length - 1; i++) {
+        if (this.currentIndex !== i && (y >= this.themeTopY[i] && y < this.themeTopY[i+1])){
+          this.currentIndex = i;
+          this.$refs.nav.currentIndex = this.currentIndex;
+        }
+      }
     }
   }
 };
@@ -99,7 +193,7 @@ export default {
   height: 100vh;
 }
 .content{
-  height: calc(100% - 44px);
+  height: calc(100% - 44px - 49px);
   overflow: hidden;
 }
 </style>

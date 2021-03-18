@@ -22,7 +22,7 @@ export class Goods {
     this.title = itemInfo.title;
     this.desc = itemInfo.desc;
     this.nowPrice = itemInfo.highNowPrice;
-    this.newPrice = itemInfo.price;
+    this.newPrice = itemInfo.lowNowPrice;
     this.oldPrice = itemInfo.oldPrice;
     this.columns = columns;
     this.services = services
