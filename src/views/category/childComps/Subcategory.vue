@@ -2,7 +2,7 @@
   <div class="subcategory">
     <div class="sub-item"  v-for="(item,index) in subcategories" :key="index">
       <a :href="item.link">
-        <img :src="item.image" alt="">
+        <img :src="item.image" alt="" @load="subImageLoad">
         <p>{{item.title}}</p>
       </a>
     </div>
@@ -18,6 +18,11 @@ export default {
       default(){
         return[]
       }
+    }
+  },
+  methods:{
+    subImageLoad(){
+      this.$emit('subImageLoad')
     }
   }
 };

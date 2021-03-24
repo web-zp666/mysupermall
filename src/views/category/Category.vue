@@ -3,14 +3,20 @@
     <nav-bar class="nav-bar">
       <div slot="nav-c">商品分类</div>
     </nav-bar>
+    <tab-control 
+    class="tabControl_1" 
+    :titles="['综合','新品','销量']" @tabClick="tabClick" 
+    v-show="isTabFixed"
+    ref="tabControl_1"/>
     <div class="content">
       <tab-menu :categories="categories" @selectItem="selectItem"/>
       <scroll id="tab-content"
       :data="[categoryData]"
       :probeType="3" :pullUpLoad="true"
-      ref="scroll">
-        <subcategory :subcategories="showSubcategory"/>
-        <tab-control class="tab-control" :titles="['综合','新品','销量']" @tabClick="tabClick"/>
+      ref="scroll" @scroll="contentScroll">
+        <subcategory :subcategories="showSubcategory"
+        @subImageLoad="subImageLoad"/>
+        <tab-control ref="tabControl_2" class="tab-control_2" :titles="['综合','新品','销量']" @tabClick="tabClick" :class="{fixed:isTabFixed}"/>
         <category-recommend :recommend="showCategoryDetail"
 
         />
@@ -42,6 +48,8 @@ export default {
       categoryData:{}, ////保存右侧二级菜单的数据，包括类别和底下的更多商品
       currentIndex: -1,
       currentType:'pop',
+      isTabFixed:false,
+      tabOffsetTop:0,
     };
   },
   computed:{
@@ -61,7 +69,7 @@ export default {
   methods:{
     _getCategory(){
       getCategory().then((res) => {
-        console.log(res)
+        //console.log(res)
         //1.保存每个分类的对应的数组数据
         this.categories = res.data.category.list
         //2.初始化每个类别中的子数据
@@ -83,7 +91,7 @@ export default {
       this.currentIndex = index;
       const maitKey = this.categories[index].maitKey;
       getSubCategory(maitKey).then((res) => {
-        console.log(res)
+        //console.log(res)
         this.categoryData[index].subcategories = res.data;
         this.categoryData = {...this.categoryData};
         this._getCategoryDetail('pop')
@@ -96,7 +104,7 @@ export default {
       const miniWallkey = this.categories[this.currentIndex].miniWallkey;
       //2.发送请求，传入miniWallkey和type参数
       getCategoryDetail(miniWallkey,type).then(res => {
-        console.log(res);
+        //console.log(res);
         this.categoryData[this.currentIndex].categoryDetail[type] = res;
         this.categoryData = {...this.categoryData}
       })
@@ -117,6 +125,14 @@ export default {
           this.currentType = 'sell'
           break;
       }
+      this.$refs.tabControl_1.currentIndex = index;
+      this.$refs.tabControl_2.currentIndex = index;
+    },
+    contentScroll(position){
+      this.isTabFixed = -position.y > this.tabOffsetTop
+    },
+    subImageLoad(){
+      this.tabOffsetTop = this.$refs.tabControl_2.$el.offsetTop - this.$refs.tabControl_2.$el.clientHeight
     }
   },
   mounted(){
@@ -149,7 +165,12 @@ export default {
   flex: 1;
   margin-top: 1px;
 }
-.tab-control{
+.tab-control_2{
   margin-bottom: 10px;
+}
+.fixed{
+  position: fixed;
+  top: 44px;
+  right: 0;
 }
 </style>

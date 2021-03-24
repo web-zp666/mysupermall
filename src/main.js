@@ -5,6 +5,7 @@ import store from './store/index'
 import toast from '@/components/common/toast/index'
 import FastClick from 'fastclick'
 import VueLazyLoad from 'vue-lazyload'
+import '@/assets/iconfont/iconfont.js'
 
 Vue.config.productionTip = false
 

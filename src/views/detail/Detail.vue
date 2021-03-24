@@ -75,7 +75,7 @@ export default {
     getDetail(this.iid).then((res) => {
       //1.获取详情页数据
       const data = res.result
-      console.log(data)
+      //console.log(data)
       //2.保存轮播图的数据
       this.topImages = data.itemInfo.topImages
       //3.保存商品的基本信息
